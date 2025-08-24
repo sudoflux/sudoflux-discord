@@ -464,6 +464,187 @@ async def main():
         view = RoleView(bot)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
     
+    @bot.tree.command(name="post_welcome", description="[Admin] Post or update welcome message")
+    @app_commands.default_permissions(administrator=True)
+    async def post_welcome_command(interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "You need administrator permissions to use this command!",
+                ephemeral=True
+            )
+            return
+        
+        # Find welcome channel
+        welcome_channel = discord.utils.get(interaction.guild.text_channels, name="welcome")
+        if not welcome_channel:
+            await interaction.response.send_message(
+                "❌ Could not find #welcome channel!",
+                ephemeral=True
+            )
+            return
+        
+        # Create welcome embed
+        embed = discord.Embed(
+            title="🎮 Welcome to sudoflux.io!",
+            description=(
+                "**Your tech & gaming community hub!**\n\n"
+                "We're a community focused on:\n"
+                "• 💻 **Tech & DevOps** - Share projects, scripts, and knowledge\n"
+                "• 🎮 **Retro Gaming & Modding** - Console mods, emulation, handhelds\n"
+                "• ⌨️ **Mechanical Keyboards** - Builds, group buys, and discussions\n"
+                "• 🖥️ **Homelabs & Servers** - Self-hosting, networking, K8s\n"
+                "• 🎯 **Gaming** - LFG, clips, and casual play\n\n"
+                "**Getting Started:**\n"
+                "1. Read the <#" + str(discord.utils.get(interaction.guild.text_channels, name="rules").id) + ">\n"
+                "2. Grab some roles in <#" + str(discord.utils.get(interaction.guild.text_channels, name="roles").id) + "> using `/roles`\n"
+                "3. Introduce yourself in <#" + str(discord.utils.get(interaction.guild.text_channels, name="introductions").id) + ">\n"
+                "4. Jump into <#" + str(discord.utils.get(interaction.guild.text_channels, name="lobby").id) + "> and say hi!\n\n"
+                "**Useful Commands:**\n"
+                "• `/roles` - Self-assign interest, platform, and region roles\n\n"
+                "Enjoy your stay! 🚀"
+            ),
+            color=discord.Color.blue()
+        )
+        embed.set_footer(text="sudoflux.io | Tech & Gaming Community")
+        
+        # Delete old messages and post new one
+        await welcome_channel.purge(limit=10)
+        await welcome_channel.send(embed=embed)
+        
+        await interaction.response.send_message(
+            "✅ Welcome message posted in #welcome!",
+            ephemeral=True
+        )
+    
+    @bot.tree.command(name="post_rules", description="[Admin] Post or update rules")
+    @app_commands.default_permissions(administrator=True)
+    async def post_rules_command(interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "You need administrator permissions to use this command!",
+                ephemeral=True
+            )
+            return
+        
+        # Find rules channel
+        rules_channel = discord.utils.get(interaction.guild.text_channels, name="rules")
+        if not rules_channel:
+            await interaction.response.send_message(
+                "❌ Could not find #rules channel!",
+                ephemeral=True
+            )
+            return
+        
+        # Create rules embed
+        embed = discord.Embed(
+            title="📜 Server Rules",
+            description="Please follow these rules to keep our community welcoming and fun!",
+            color=discord.Color.red()
+        )
+        
+        embed.add_field(
+            name="1️⃣ Be Respectful",
+            value="Treat everyone with respect. No harassment, hate speech, or discrimination.",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="2️⃣ No Spam or Self-Promotion",
+            value="Don't spam messages, images, or links. Self-promotion requires staff approval.",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="3️⃣ Keep Content Appropriate",
+            value="No NSFW content. Keep discussions PG-13.",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="4️⃣ Stay On Topic",
+            value="Use the appropriate channels for discussions. Check channel descriptions.",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="5️⃣ No Piracy",
+            value="Don't share or request pirated content, cracks, or license keys.",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="6️⃣ English Primary Language",
+            value="Please use English in public channels for moderation purposes.",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="7️⃣ Follow Discord ToS",
+            value="Follow Discord's Terms of Service and Community Guidelines.",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="8️⃣ Marketplace Rules",
+            value="Trading requires 'Marketplace Verified' role. No scamming. Use at your own risk.",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="⚠️ Enforcement",
+            value="Breaking rules may result in warnings, mutes, kicks, or bans at staff discretion.",
+            inline=False
+        )
+        
+        embed.set_footer(text="Last updated: " + datetime.utcnow().strftime("%Y-%m-%d"))
+        
+        # Delete old messages and post new one
+        await rules_channel.purge(limit=10)
+        await rules_channel.send(embed=embed)
+        
+        await interaction.response.send_message(
+            "✅ Rules posted in #rules!",
+            ephemeral=True
+        )
+    
+    @bot.tree.command(name="init_members", description="[Admin] Give Guest role to existing members")
+    @app_commands.default_permissions(administrator=True)
+    async def init_members_command(interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "You need administrator permissions to use this command!",
+                ephemeral=True
+            )
+            return
+        
+        await interaction.response.defer(ephemeral=True)
+        
+        # Get Guest role
+        guest_role = discord.utils.get(interaction.guild.roles, name="Guest")
+        if not guest_role:
+            await interaction.followup.send(
+                "❌ Guest role not found! Run /setup first.",
+                ephemeral=True
+            )
+            return
+        
+        # Count members who need the role
+        members_updated = 0
+        for member in interaction.guild.members:
+            if member.bot:
+                continue
+            if len(member.roles) == 1:  # Only has @everyone role
+                try:
+                    await member.add_roles(guest_role, reason="Initial role assignment")
+                    members_updated += 1
+                except:
+                    pass
+        
+        await interaction.followup.send(
+            f"✅ Added Guest role to {members_updated} existing members!",
+            ephemeral=True
+        )
+    
     @bot.tree.command(name="setup", description="[Admin] Setup the server structure")
     @app_commands.default_permissions(administrator=True)
     async def setup_command(interaction: discord.Interaction):
