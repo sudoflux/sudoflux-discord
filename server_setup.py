@@ -351,6 +351,7 @@ class RoleView(discord.ui.View):
     def __init__(self, bot: SudofluxBot):
         super().__init__(timeout=180)
         self.bot = bot
+        self.mode = "add"  # Start in add mode
         
         interests = [r for r in self.bot.assignable_roles if r in 
                     ['Tech', 'DevOps', 'Homelab', 'Retro', 'Modding', 'Keyboards', 'Gaming']]
@@ -359,19 +360,67 @@ class RoleView(discord.ui.View):
         regions = [r for r in self.bot.assignable_roles if r in 
                     ['NA', 'EU', 'APAC']]
         
+        # Add dropdowns on different rows to avoid limit
         if interests:
-            self.add_item(RoleSelect(interests, "add", "Interest"))
-            self.add_item(RoleSelect(interests, "remove", "Interest"))
+            select = RoleSelect(interests, "add", "Interest")
+            select.row = 0
+            self.add_item(select)
         
         if platforms:
-            self.add_item(RoleSelect(platforms, "add", "Platform"))
-            self.add_item(RoleSelect(platforms, "remove", "Platform"))
+            select = RoleSelect(platforms, "add", "Platform")
+            select.row = 1
+            self.add_item(select)
         
         if regions:
-            self.add_item(RoleSelect(regions, "add", "Region"))
-            self.add_item(RoleSelect(regions, "remove", "Region"))
+            select = RoleSelect(regions, "add", "Region")
+            select.row = 2
+            self.add_item(select)
     
-    @discord.ui.button(label="View My Roles", style=discord.ButtonStyle.primary, row=4)
+    @discord.ui.button(label="Remove Roles Instead", style=discord.ButtonStyle.danger, row=3)
+    async def toggle_mode(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Clear current items except buttons
+        for item in self.children[:]:
+            if isinstance(item, RoleSelect):
+                self.remove_item(item)
+        
+        # Toggle mode
+        if self.mode == "add":
+            self.mode = "remove"
+            button.label = "Add Roles Instead"
+            button.style = discord.ButtonStyle.success
+            action = "remove"
+        else:
+            self.mode = "add"
+            button.label = "Remove Roles Instead"
+            button.style = discord.ButtonStyle.danger
+            action = "add"
+        
+        # Re-add dropdowns with new action
+        interests = [r for r in self.bot.assignable_roles if r in 
+                    ['Tech', 'DevOps', 'Homelab', 'Retro', 'Modding', 'Keyboards', 'Gaming']]
+        platforms = [r for r in self.bot.assignable_roles if r in 
+                    ['PC', 'Switch', 'PlayStation', 'Xbox']]
+        regions = [r for r in self.bot.assignable_roles if r in 
+                    ['NA', 'EU', 'APAC']]
+        
+        if interests:
+            select = RoleSelect(interests, action, "Interest")
+            select.row = 0
+            self.add_item(select)
+        
+        if platforms:
+            select = RoleSelect(platforms, action, "Platform")
+            select.row = 1
+            self.add_item(select)
+        
+        if regions:
+            select = RoleSelect(regions, action, "Region")
+            select.row = 2
+            self.add_item(select)
+        
+        await interaction.response.edit_message(view=self)
+    
+    @discord.ui.button(label="View My Roles", style=discord.ButtonStyle.primary, row=3)
     async def view_roles(self, interaction: discord.Interaction, button: discord.ui.Button):
         member = interaction.user
         assignable_roles = [r for r in member.roles if r.name in self.bot.assignable_roles]
@@ -398,8 +447,17 @@ async def main():
     @bot.tree.command(name="roles", description="Manage your self-assignable roles")
     async def roles_command(interaction: discord.Interaction):
         embed = discord.Embed(
-            title="Role Management",
-            description="Use the dropdowns below to add or remove roles.\n\n**Available Categories:**\n• **Interests**: Tech, DevOps, Homelab, Retro, Modding, Keyboards, Gaming\n• **Platforms**: PC, Switch, PlayStation, Xbox\n• **Regions**: NA, EU, APAC",
+            title="🎭 Role Management",
+            description=(
+                "**How to use:**\n"
+                "1. Select roles from the dropdowns below to **add** them\n"
+                "2. Click 'Remove Roles Instead' to switch to removal mode\n"
+                "3. Click 'View My Roles' to see your current roles\n\n"
+                "**Available Roles:**\n"
+                "📚 **Interests**: Tech, DevOps, Homelab, Retro, Modding, Keyboards, Gaming\n"
+                "🎮 **Platforms**: PC, Switch, PlayStation, Xbox\n"
+                "🌍 **Regions**: NA, EU, APAC"
+            ),
             color=discord.Color.blue()
         )
         
