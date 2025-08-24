@@ -101,7 +101,7 @@ class SudofluxBot(commands.Bot):
                 permissions = discord.Permissions.none()
                 if 'permissions' in role_data:
                     if role_data['permissions'] == 'administrator':
-                        permissions = discord.Permissions.administrator()
+                        permissions = discord.Permissions.administrator
                     else:
                         for perm in role_data['permissions'].split(','):
                             setattr(permissions, perm.strip(), True)
