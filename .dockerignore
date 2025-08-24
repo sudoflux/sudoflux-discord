@@ -1,0 +1,13 @@
+.env
+.env.local
+*.pyc
+__pycache__/
+.git/
+.github/
+k8s/
+.gitignore
+.dockerignore
+README.md
+*.log
+.vscode/
+.idea/

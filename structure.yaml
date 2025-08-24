@@ -1,0 +1,326 @@
+server_name: sudoflux.io
+
+roles:
+  core:
+    - name: Admin
+      color: 0xFF0000
+      permissions: administrator
+      hoist: true
+      mentionable: false
+    - name: Moderator
+      color: 0x00FF00
+      permissions: manage_messages,kick_members,ban_members,manage_channels,manage_roles
+      hoist: true
+      mentionable: true
+    - name: Staff
+      color: 0x0099FF
+      permissions: manage_messages,kick_members
+      hoist: true
+      mentionable: true
+    - name: Bot
+      color: 0x9B59B6
+      permissions: manage_messages,manage_roles,send_messages,embed_links
+      hoist: false
+      mentionable: false
+  
+  interests:
+    - name: Tech
+      color: 0x3498DB
+      hoist: false
+      mentionable: true
+    - name: DevOps
+      color: 0xE67E22
+      hoist: false
+      mentionable: true
+    - name: Homelab
+      color: 0x2ECC71
+      hoist: false
+      mentionable: true
+    - name: Retro
+      color: 0xF39C12
+      hoist: false
+      mentionable: true
+    - name: Modding
+      color: 0x9B59B6
+      hoist: false
+      mentionable: true
+    - name: Keyboards
+      color: 0xE91E63
+      hoist: false
+      mentionable: true
+    - name: Gaming
+      color: 0x1ABC9C
+      hoist: false
+      mentionable: true
+  
+  platforms:
+    - name: PC
+      color: 0x607D8B
+      hoist: false
+      mentionable: true
+    - name: Switch
+      color: 0xE60012
+      hoist: false
+      mentionable: true
+    - name: PlayStation
+      color: 0x003791
+      hoist: false
+      mentionable: true
+    - name: Xbox
+      color: 0x107C10
+      hoist: false
+      mentionable: true
+  
+  regions:
+    - name: NA
+      color: 0x546E7A
+      hoist: false
+      mentionable: true
+    - name: EU
+      color: 0x546E7A
+      hoist: false
+      mentionable: true
+    - name: APAC
+      color: 0x546E7A
+      hoist: false
+      mentionable: true
+  
+  special:
+    - name: Marketplace Verified
+      color: 0xFFD700
+      hoist: true
+      mentionable: false
+    - name: Guest
+      color: 0x95A5A6
+      hoist: false
+      mentionable: false
+
+categories:
+  - name: "00 START HERE"
+    position: 0
+    channels:
+      - name: welcome
+        type: text
+        position: 0
+        read_only: true
+        allowed_writers: [Staff, Bot]
+        topic: "Welcome to sudoflux.io! Read the rules and grab some roles."
+      - name: rules
+        type: text
+        position: 1
+        read_only: true
+        allowed_writers: [Staff]
+        topic: "Server rules and guidelines"
+      - name: announcements
+        type: text
+        position: 2
+        read_only: true
+        allowed_writers: [Staff, Bot]
+        topic: "Important server announcements"
+      - name: roles
+        type: text
+        position: 3
+        topic: "Use /roles to pick your interests"
+  
+  - name: "10 LOUNGE"
+    position: 1
+    channels:
+      - name: lobby
+        type: text
+        position: 0
+        topic: "General chat and hangout"
+      - name: introductions
+        type: text
+        position: 1
+        topic: "Introduce yourself to the community"
+      - name: media
+        type: text
+        position: 2
+        topic: "Share cool media and links"
+      - name: memes
+        type: text
+        position: 3
+        topic: "Memes and fun stuff"
+      - name: bot-commands
+        type: text
+        position: 4
+        topic: "Bot command testing and usage"
+  
+  - name: "20 TECH LAB"
+    position: 2
+    channels:
+      - name: devops-chat
+        type: text
+        position: 0
+        topic: "DevOps, CI/CD, and infrastructure"
+      - name: coding
+        type: text
+        position: 1
+        topic: "Programming and software development"
+      - name: scripts
+        type: text
+        position: 2
+        topic: "Share and discuss scripts"
+      - name: tooling
+        type: text
+        position: 3
+        topic: "Development tools and utilities"
+  
+  - name: "30 RETRO & MODDING"
+    position: 3
+    channels:
+      - name: retro-gaming
+        type: text
+        position: 0
+        topic: "Classic games and systems"
+      - name: emulation
+        type: text
+        position: 1
+        topic: "Emulation discussion and help"
+      - name: console-modding
+        type: text
+        position: 2
+        topic: "Console modifications and hacks"
+      - name: handhelds
+        type: text
+        position: 3
+        topic: "Portable gaming devices"
+      - name: 3d-printing
+        type: text
+        position: 4
+        topic: "3D printing for mods and cases"
+      - name: soldering
+        type: text
+        position: 5
+        topic: "Soldering tips and projects"
+  
+  - name: "40 MECH KEYS"
+    position: 4
+    channels:
+      - name: keyboards
+        type: text
+        position: 0
+        topic: "Mechanical keyboard discussion"
+      - name: builds
+        type: text
+        position: 1
+        topic: "Show off your keyboard builds"
+      - name: keycaps
+        type: text
+        position: 2
+        topic: "Keycap sets and artisans"
+      - name: firmware-qmk-via
+        type: text
+        position: 3
+        topic: "QMK, VIA, and firmware discussion"
+      - name: vendors
+        type: text
+        position: 4
+        topic: "Vendor updates and group buys"
+      - name: gallery-keyboards
+        type: text
+        position: 5
+        topic: "Keyboard photo gallery"
+  
+  - name: "50 HOMELAB & SERVERS"
+    position: 5
+    channels:
+      - name: homelab
+        type: text
+        position: 0
+        topic: "Homelab setups and discussion"
+      - name: server-builds
+        type: text
+        position: 1
+        topic: "Server hardware and builds"
+      - name: networking
+        type: text
+        position: 2
+        topic: "Home networking and infrastructure"
+      - name: storage
+        type: text
+        position: 3
+        topic: "Storage solutions and NAS"
+      - name: virtualization
+        type: text
+        position: 4
+        topic: "VMs, Proxmox, ESXi, etc"
+      - name: containers
+        type: text
+        position: 5
+        topic: "Docker and container orchestration"
+      - name: k8s-lite
+        type: text
+        position: 6
+        topic: "Kubernetes at home"
+  
+  - name: "60 GAMING"
+    position: 6
+    channels:
+      - name: lfg
+        type: text
+        position: 0
+        slowmode: 30
+        topic: "Looking for group - create threads for sessions"
+      - name: clips
+        type: text
+        position: 1
+        topic: "Share your gaming clips"
+      - name: streams
+        type: text
+        position: 2
+        topic: "Stream announcements and promotion"
+  
+  - name: "70 MARKET"
+    position: 7
+    channels:
+      - name: buy-sell-trade
+        type: text
+        position: 0
+        topic: "Marketplace Verified members only"
+        marketplace_only: true
+      - name: price-checks
+        type: text
+        position: 1
+        topic: "Get pricing advice"
+      - name: deals
+        type: text
+        position: 2
+        topic: "Share deals and discounts"
+  
+  - name: "90 VOICE"
+    position: 8
+    channels:
+      - name: Hangout
+        type: voice
+        position: 0
+        user_limit: 0
+      - name: Gaming 1
+        type: voice
+        position: 1
+        user_limit: 10
+      - name: Gaming 2
+        type: voice
+        position: 2
+        user_limit: 10
+      - name: Retro Couch
+        type: voice
+        position: 3
+        user_limit: 4
+      - name: AFK
+        type: voice
+        position: 4
+        user_limit: 0
+  
+  - name: "99 STAFF"
+    position: 9
+    private: true
+    channels:
+      - name: staff
+        type: text
+        position: 0
+        topic: "Staff discussion"
+      - name: bot-logs
+        type: text
+        position: 1
+        topic: "Bot activity logs"
