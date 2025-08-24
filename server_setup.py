@@ -10,6 +10,7 @@ from datetime import datetime
 import logging
 from dotenv import load_dotenv
 from ai_chat import AIChat
+from web_search import WebSearch
 
 load_dotenv()
 
@@ -41,6 +42,9 @@ class SudofluxBot(commands.Bot):
         ollama_port = int(os.getenv('OLLAMA_PORT', '11434'))
         ai_model = os.getenv('AI_MODEL', 'mistral:7b')
         self.ai_chat = AIChat(ollama_host, ollama_port, ai_model)
+        
+        # Initialize web search
+        self.web_search = WebSearch()
     
     def load_structure(self) -> Dict[str, Any]:
         """Load the server structure from YAML file"""
@@ -63,6 +67,7 @@ class SudofluxBot(commands.Bot):
         """Setup hook for bot initialization"""
         logger.info("Bot setup hook started")
         await self.ai_chat.start()
+        await self.web_search.start()
         
     async def on_ready(self):
         """Bot ready event"""
@@ -330,13 +335,28 @@ class SudofluxBot(commands.Bot):
             await message.reply("🧹 Conversation history cleared!")
             return
         
+        # Check if user wants to search
+        search_context = ""
+        if content.lower().startswith(('search ', 'google ', 'find ')):
+            # Extract search query
+            search_query = content.split(' ', 1)[1] if ' ' in content else content
+            await message.add_reaction('🔍')
+            
+            # Perform search
+            search_results = await self.web_search.search_for_ai(search_query)
+            search_context = search_results
+            
+            # Modify prompt to ask AI to use search results
+            content = f"Based on these web search results, {content}"
+        
         # Show typing indicator
         async with message.channel.typing():
             # Generate AI response
             response = await self.ai_chat.generate_response(
                 content,
                 message.author.id,
-                message.channel.id if not is_dm else None
+                message.channel.id if not is_dm else None,
+                search_context=search_context
             )
             
             if response:
@@ -671,6 +691,20 @@ async def main():
             "✅ Rules posted in #rules!",
             ephemeral=True
         )
+    
+    @bot.tree.command(name="search", description="Search the web")
+    @app_commands.describe(query="What to search for")
+    async def search_command(interaction: discord.Interaction, query: str):
+        await interaction.response.defer()
+        
+        # Perform search
+        results = await bot.web_search.search_searxng(query, max_results=5)
+        
+        if results:
+            formatted = bot.web_search.format_results(results, query)
+            await interaction.followup.send(formatted)
+        else:
+            await interaction.followup.send(f"❌ No results found for: **{query}**")
     
     @bot.tree.command(name="init_members", description="[Admin] Give Guest role to existing members")
     @app_commands.default_permissions(administrator=True)

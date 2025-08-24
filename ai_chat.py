@@ -83,7 +83,7 @@ If asked about the server, mention it's a tech and gaming community focused on D
         self.user_last_message[user_id] = now
         return True
     
-    async def generate_response(self, prompt: str, user_id: int, channel_id: Optional[int] = None) -> Optional[str]:
+    async def generate_response(self, prompt: str, user_id: int, channel_id: Optional[int] = None, search_context: str = "") -> Optional[str]:
         """Generate a response using Ollama"""
         try:
             if not self.session:
@@ -99,6 +99,10 @@ If asked about the server, mention it's a tech and gaming community focused on D
             
             # Build the full prompt with context
             full_prompt = self.system_prompt + "\n\n"
+            
+            # Add search context if provided
+            if search_context:
+                full_prompt += f"Web Search Information:\n{search_context}\n\n"
             
             # Add conversation history
             for msg in context:
