@@ -286,14 +286,18 @@ class SudofluxBot(commands.Bot):
                 await log_channel.send(embed=embed)
 
 class RoleSelect(discord.ui.Select):
-    def __init__(self, roles: List[str], action: str):
+    def __init__(self, roles: List[str], action: str, category: str = ""):
         self.action = action
+        self.category = category
         options = [
             discord.SelectOption(label=role, value=role)
             for role in roles[:25]
         ]
         
-        placeholder = f"Select roles to {action}"
+        if category:
+            placeholder = f"{action.capitalize()} {category} roles"
+        else:
+            placeholder = f"Select roles to {action}"
         super().__init__(
             placeholder=placeholder,
             min_values=1,
@@ -356,16 +360,16 @@ class RoleView(discord.ui.View):
                     ['NA', 'EU', 'APAC']]
         
         if interests:
-            self.add_item(RoleSelect(interests, "add"))
-            self.add_item(RoleSelect(interests, "remove"))
+            self.add_item(RoleSelect(interests, "add", "Interest"))
+            self.add_item(RoleSelect(interests, "remove", "Interest"))
         
         if platforms:
-            self.add_item(RoleSelect(platforms, "add"))
-            self.add_item(RoleSelect(platforms, "remove"))
+            self.add_item(RoleSelect(platforms, "add", "Platform"))
+            self.add_item(RoleSelect(platforms, "remove", "Platform"))
         
         if regions:
-            self.add_item(RoleSelect(regions, "add"))
-            self.add_item(RoleSelect(regions, "remove"))
+            self.add_item(RoleSelect(regions, "add", "Region"))
+            self.add_item(RoleSelect(regions, "remove", "Region"))
     
     @discord.ui.button(label="View My Roles", style=discord.ButtonStyle.primary, row=4)
     async def view_roles(self, interaction: discord.Interaction, button: discord.ui.Button):
