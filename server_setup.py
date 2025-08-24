@@ -9,6 +9,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 import logging
 from dotenv import load_dotenv
+from ai_chat import AIChat
 
 load_dotenv()
 
@@ -34,6 +35,12 @@ class SudofluxBot(commands.Bot):
         
         self.structure = self.load_structure()
         self.assignable_roles = self.get_assignable_roles()
+        
+        # Initialize AI chat
+        ollama_host = os.getenv('OLLAMA_HOST', '192.168.100.20')
+        ollama_port = int(os.getenv('OLLAMA_PORT', '11434'))
+        ai_model = os.getenv('AI_MODEL', 'mistral:7b')
+        self.ai_chat = AIChat(ollama_host, ollama_port, ai_model)
     
     def load_structure(self) -> Dict[str, Any]:
         """Load the server structure from YAML file"""
@@ -55,6 +62,7 @@ class SudofluxBot(commands.Bot):
     async def setup_hook(self):
         """Setup hook for bot initialization"""
         logger.info("Bot setup hook started")
+        await self.ai_chat.start()
         
     async def on_ready(self):
         """Bot ready event"""
@@ -284,6 +292,63 @@ class SudofluxBot(commands.Bot):
                 
                 embed.set_footer(text=f"ID: {after.id}")
                 await log_channel.send(embed=embed)
+    
+    async def on_message(self, message: discord.Message):
+        """Handle messages for AI chat"""
+        # Ignore messages from bots
+        if message.author.bot:
+            return
+        
+        # Process commands first
+        await self.process_commands(message)
+        
+        # Check if bot was mentioned or if it's a DM
+        is_mentioned = self.user in message.mentions
+        is_dm = isinstance(message.channel, discord.DMChannel)
+        
+        # Only respond if mentioned or in DMs
+        if not (is_mentioned or is_dm):
+            return
+        
+        # Clean the message content
+        if is_mentioned:
+            # Remove bot mention from message
+            content = message.content.replace(f'<@{self.user.id}>', '').replace(f'<@!{self.user.id}>', '').strip()
+        else:
+            content = message.content.strip()
+        
+        # Skip if empty message
+        if not content:
+            return
+        
+        # Special commands
+        if content.lower() in ['clear', 'reset', 'forget']:
+            await self.ai_chat.clear_context(
+                message.author.id,
+                message.channel.id if not is_dm else None
+            )
+            await message.reply("🧹 Conversation history cleared!")
+            return
+        
+        # Show typing indicator
+        async with message.channel.typing():
+            # Generate AI response
+            response = await self.ai_chat.generate_response(
+                content,
+                message.author.id,
+                message.channel.id if not is_dm else None
+            )
+            
+            if response:
+                # Split response if too long
+                if len(response) > 2000:
+                    chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
+                    for chunk in chunks:
+                        await message.reply(chunk)
+                else:
+                    await message.reply(response)
+            else:
+                await message.reply("😅 Sorry, I'm having trouble thinking right now. Try again in a moment!")
 
 class RoleSelect(discord.ui.Select):
     def __init__(self, roles: List[str], action: str, category: str = ""):
