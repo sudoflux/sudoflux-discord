@@ -363,8 +363,8 @@ class SudofluxBot(commands.Bot):
                             content = f"{content} (I searched for: {search_query})"
                         break
         
-        # Also check for questions that likely need current info
-        elif any(keyword in content.lower() for keyword in ['latest', 'current', 'today', 'news', 'price', 'weather', 'score', 'time', 'when', 'stock', 'temperature', 'forecast', 'date', 'day', 'month', 'year']):
+        # Also check for questions that likely need current info (if no explicit search trigger)
+        if not search_context and any(keyword in content.lower() for keyword in ['latest', 'current', 'today', 'news', 'price', 'weather', 'score', 'time', 'when', 'stock', 'temperature', 'forecast', 'date', 'day', 'month', 'year']):
             # Automatically search for relevant terms
             auto_search_query = content
             await message.add_reaction('🔍')
