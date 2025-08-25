@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 logger = logging.getLogger('sudoflux-bot.ai')
 
 class AIChat:
-    def __init__(self, ollama_host: str = "192.168.100.20", ollama_port: int = 11434, model: str = "qwen2.5:14b"):
+    def __init__(self, ollama_host: str = "192.168.100.20", ollama_port: int = 11434, model: str = "qwen3:14b"):
         self.base_url = f"http://{ollama_host}:{ollama_port}"
         self.model = model
         self.session = None
@@ -27,7 +27,9 @@ class AIChat:
 You're friendly, knowledgeable about tech, gaming, retro computing, mechanical keyboards, and homelabs.
 Keep responses concise and engaging. Use Discord markdown when helpful.
 Be helpful but also casual and fun. You can use appropriate emojis occasionally.
-If asked about the server, mention it's a tech and gaming community focused on DevOps, retro gaming, keyboards, and homelabs."""
+If asked about the server, mention it's a tech and gaming community focused on DevOps, retro gaming, keyboards, and homelabs.
+
+IMPORTANT: You have the ability to search the web for current information. If a user asks about something that requires current data or you don't know the answer, tell them to use 'search: <query>' before their question to get web results. For example: 'search: latest nvidia gpu' or 'search: kubernetes 1.29 features'."""
     
     async def start(self):
         """Initialize the aiohttp session"""

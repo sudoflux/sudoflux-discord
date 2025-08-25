@@ -40,7 +40,7 @@ class SudofluxBot(commands.Bot):
         # Initialize AI chat
         ollama_host = os.getenv('OLLAMA_HOST', '192.168.100.20')
         ollama_port = int(os.getenv('OLLAMA_PORT', '11434'))
-        ai_model = os.getenv('AI_MODEL', 'qwen2.5:14b')
+        ai_model = os.getenv('AI_MODEL', 'qwen3:14b')
         self.ai_chat = AIChat(ollama_host, ollama_port, ai_model)
         
         # Initialize web search
@@ -335,19 +335,44 @@ class SudofluxBot(commands.Bot):
             await message.reply("🧹 Conversation history cleared!")
             return
         
-        # Check if user wants to search
+        # Check if user wants to search - more flexible detection
         search_context = ""
-        if content.lower().startswith(('search ', 'google ', 'find ')):
-            # Extract search query
-            search_query = content.split(' ', 1)[1] if ' ' in content else content
+        search_triggers = ['search:', 'google:', 'find:', 'lookup:', 'web:']
+        
+        # Check if message contains search trigger
+        for trigger in search_triggers:
+            if trigger in content.lower():
+                # Extract search query
+                parts = content.lower().split(trigger, 1)
+                if len(parts) > 1:
+                    search_query = parts[1].strip()
+                    # Remove the search part from the original message
+                    content = content[:content.lower().index(trigger)].strip()
+                    
+                    if search_query:
+                        await message.add_reaction('🔍')
+                        
+                        # Perform search
+                        search_results = await self.web_search.search_for_ai(search_query)
+                        search_context = search_results
+                        
+                        # If there was no question, just search
+                        if not content:
+                            content = f"What can you tell me about {search_query} based on web search?"
+                        else:
+                            content = f"{content} (I searched for: {search_query})"
+                        break
+        
+        # Also check for questions that likely need current info
+        elif any(keyword in content.lower() for keyword in ['latest', 'current', 'today', 'news', 'price of', 'weather', 'score']):
+            # Automatically search for relevant terms
+            auto_search_query = content
             await message.add_reaction('🔍')
             
             # Perform search
-            search_results = await self.web_search.search_for_ai(search_query)
+            search_results = await self.web_search.search_for_ai(auto_search_query)
             search_context = search_results
-            
-            # Modify prompt to ask AI to use search results
-            content = f"Based on these web search results, {content}"
+            content = f"{content} (I automatically searched the web for current information)"
         
         # Show typing indicator
         async with message.channel.typing():
