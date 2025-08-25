@@ -142,6 +142,14 @@ IMPORTANT WEB SEARCH INSTRUCTIONS:
                     data = await response.json()
                     ai_response = data.get("response", "").strip()
                     
+                    # For Deepseek-R1 models, strip out thinking tags
+                    if 'deepseek-r1' in self.model.lower():
+                        import re
+                        # Remove <think>...</think> or Thinking:...done thinking patterns
+                        ai_response = re.sub(r'<think>.*?</think>', '', ai_response, flags=re.DOTALL)
+                        ai_response = re.sub(r'Thinking\.\.\..*?\.\.\.done thinking\.', '', ai_response, flags=re.DOTALL)
+                        ai_response = ai_response.strip()
+                    
                     # Add to context
                     self.add_to_context(conv_key, "user", prompt)
                     self.add_to_context(conv_key, "assistant", ai_response)

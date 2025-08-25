@@ -41,7 +41,7 @@ class SudofluxBot(commands.Bot):
         # Initialize AI chat
         ollama_host = os.getenv('OLLAMA_HOST', '192.168.100.20')
         ollama_port = int(os.getenv('OLLAMA_PORT', '11434'))
-        ai_model = os.getenv('AI_MODEL', 'qwen3:14b')
+        ai_model = os.getenv('AI_MODEL', 'deepseek-r1:14b')
         self.ai_chat = AIChat(ollama_host, ollama_port, ai_model)
         
         # Initialize web search
