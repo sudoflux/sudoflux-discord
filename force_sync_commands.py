@@ -25,9 +25,16 @@ class CommandSyncBot(discord.Client):
         if not self.synced:
             logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
             
-            # Clear and re-register commands
-            logger.info("Clearing existing commands...")
+            # Clear ALL commands first - both global and guild
+            logger.info("Clearing ALL existing commands...")
             self.tree.clear_commands(guild=None)
+            
+            # Clear guild-specific commands if GUILD_ID is set
+            guild_id = os.getenv('GUILD_ID')
+            if guild_id:
+                guild_obj = discord.Object(id=int(guild_id))
+                self.tree.clear_commands(guild=guild_obj)
+                logger.info(f"Cleared guild-specific commands for guild {guild_id}")
             
             # Register all commands from server_setup.py
             @self.tree.command(name="roles", description="Manage your self-assignable roles")
@@ -40,9 +47,24 @@ class CommandSyncBot(discord.Client):
                 await interaction.response.send_message(f"Searching: {query}", ephemeral=True)
             
             @self.tree.command(name="imagine", description="Generate an image with AI")
-            @app_commands.describe(prompt="What to generate")
-            async def imagine(interaction: discord.Interaction, prompt: str):
-                await interaction.response.send_message(f"Generating: {prompt}", ephemeral=True)
+            @app_commands.describe(
+                prompt="What to generate",
+                negative="What to avoid in the image (optional)",
+                quality="Quality preset: fast (4 steps), balanced (8 steps), quality (12 steps)",
+                width="Image width in pixels (512-1024, default: 1024)",
+                height="Image height in pixels (512-1024, default: 1024)",
+                seed="Random seed for reproducibility (-1 for random)"
+            )
+            async def imagine(
+                interaction: discord.Interaction, 
+                prompt: str,
+                negative: str = "",
+                quality: str = "balanced",
+                width: int = 1024,
+                height: int = 1024,
+                seed: int = -1
+            ):
+                await interaction.response.send_message(f"Generating: {prompt} (quality: {quality})", ephemeral=True)
             
             @self.tree.command(name="post_welcome", description="[Admin] Post or update welcome message")
             @app_commands.default_permissions(administrator=True)
