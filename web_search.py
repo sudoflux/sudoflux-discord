@@ -39,28 +39,54 @@ class WebSearch:
                 html = await response.text()
                 results = []
                 
-                # Simple HTML parsing for results
-                # DuckDuckGo HTML format: <a class="result__a" href="URL">Title</a>
-                # <a class="result__snippet">Description</a>
+                # More robust HTML parsing for DuckDuckGo results
+                # Look for multiple patterns to increase success rate
                 
-                # Extract result blocks
-                result_pattern = r'<div class="result results_links.*?>(.*?)</div>\s*</div>'
-                matches = re.findall(result_pattern, html, re.DOTALL)
+                # Pattern 1: Try to find result blocks
+                result_blocks = re.findall(r'<div[^>]*class="[^"]*result[^"]*"[^>]*>(.*?)</div>\s*(?:</div>|<div)', html, re.DOTALL)
                 
-                for match in matches[:max_results]:
-                    # Extract URL
-                    url_match = re.search(r'href="(https?://[^"]+)"', match)
-                    # Extract title
-                    title_match = re.search(r'class="result__a"[^>]*>([^<]+)</a>', match)
-                    # Extract snippet
-                    snippet_match = re.search(r'class="result__snippet"[^>]*>([^<]+)', match)
+                # Pattern 2: Also look for direct links
+                if not result_blocks:
+                    result_blocks = re.findall(r'<a[^>]*class="result__a"[^>]*>.*?</a>', html, re.DOTALL)
+                
+                for block in result_blocks[:max_results * 2]:  # Get more blocks to ensure we have enough valid results
+                    # Extract URL - try multiple patterns
+                    url_match = (re.search(r'href="(https?://[^"]+)"', block) or 
+                                re.search(r'href=\'(https?://[^\']+)\'', block))
+                    
+                    # Extract title - try multiple patterns
+                    title_match = (re.search(r'class="result__a"[^>]*>([^<]+)', block) or
+                                  re.search(r'>([^<]{10,})</a>', block))  # Fallback to any link text
+                    
+                    # Extract snippet - try multiple patterns
+                    snippet_match = (re.search(r'class="result__snippet"[^>]*>([^<]+)', block) or
+                                    re.search(r'class="[^"]*snippet[^"]*"[^>]*>([^<]+)', block) or
+                                    re.search(r'<span[^>]*>([^<]{20,})</span>', block))  # Fallback to any span with text
                     
                     if url_match and title_match:
-                        results.append({
-                            'title': self.clean_html(title_match.group(1)),
-                            'url': url_match.group(1),
-                            'snippet': self.clean_html(snippet_match.group(1)) if snippet_match else ''
-                        })
+                        url = url_match.group(1)
+                        # Skip DuckDuckGo internal URLs
+                        if 'duckduckgo.com' not in url:
+                            results.append({
+                                'title': self.clean_html(title_match.group(1))[:200],
+                                'url': url,
+                                'snippet': self.clean_html(snippet_match.group(1))[:300] if snippet_match else 'No description available'
+                            })
+                            
+                            if len(results) >= max_results:
+                                break
+                
+                # If still no results, try a simpler approach
+                if not results:
+                    # Just find any external links
+                    all_links = re.findall(r'<a[^>]*href="(https?://[^"]+)"[^>]*>([^<]+)</a>', html)
+                    for url, text in all_links[:max_results]:
+                        if 'duckduckgo.com' not in url and len(text) > 5:
+                            results.append({
+                                'title': self.clean_html(text)[:200],
+                                'url': url,
+                                'snippet': 'No description available'
+                            })
                 
                 return results
                 
@@ -83,7 +109,7 @@ class WebSearch:
                 'safesearch': 0
             }
             
-            async with self.session.get(url, params=params, timeout=10) as response:
+            async with self.session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=5)) as response:
                 if response.status == 200:
                     data = await response.json()
                     results = []
@@ -134,7 +160,8 @@ class WebSearch:
     
     async def search_for_ai(self, query: str, max_results: int = 3) -> str:
         """Search and format results for AI context"""
-        results = await self.search_searxng(query, max_results=max_results)
+        # Try DuckDuckGo directly since SearXNG seems unreliable
+        results = await self.search_duckduckgo(query, max_results=max_results)
         
         if not results:
             return "No search results found."

@@ -722,8 +722,8 @@ async def main():
     async def search_command(interaction: discord.Interaction, query: str):
         await interaction.response.defer()
         
-        # Perform search
-        results = await bot.web_search.search_searxng(query, max_results=5)
+        # Try DuckDuckGo directly since SearXNG seems to be down
+        results = await bot.web_search.search_duckduckgo(query, max_results=5)
         
         if results:
             formatted = bot.web_search.format_results(results, query)
