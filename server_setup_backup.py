@@ -48,14 +48,9 @@ class SudofluxBot(commands.Bot):
         self.web_search = WebSearch()
         
         # Initialize image generator
-        try:
-            sd_host = os.getenv('SD_HOST', '192.168.100.20')
-            sd_port = int(os.getenv('SD_PORT', '7860'))
-            self.image_gen = ImageGenerator(sd_host, sd_port)
-            logger.info(f"Image generator initialized for {sd_host}:{sd_port}")
-        except Exception as e:
-            logger.error(f"Failed to initialize image generator: {e}")
-            self.image_gen = None
+        sd_host = os.getenv('SD_HOST', '192.168.100.20')
+        sd_port = int(os.getenv('SD_PORT', '7860'))
+        self.image_gen = ImageGenerator(sd_host, sd_port)
     
     def load_structure(self) -> Dict[str, Any]:
         """Load the server structure from YAML file"""
@@ -79,8 +74,7 @@ class SudofluxBot(commands.Bot):
         logger.info("Bot setup hook started")
         await self.ai_chat.start()
         await self.web_search.start()
-        if self.image_gen:
-            await self.image_gen.start()
+        await self.image_gen.start()
         
     async def on_ready(self):
         """Bot ready event"""
@@ -784,11 +778,6 @@ async def main():
         width = max(512, min(1024, width))
         height = max(512, min(1024, height))
         
-        # Check if image_gen is available
-        if not bot.image_gen:
-            await interaction.followup.send("❌ Image generation is not configured.")
-            return
-            
         # Check if SD server is available
         if not await bot.image_gen.check_health():
             await interaction.followup.send("❌ Image generation service is not available right now. Please try again later.")
