@@ -364,19 +364,22 @@ class SudofluxBot(commands.Bot):
                         break
         
         # Also check for questions that likely need current info
-        elif any(keyword in content.lower() for keyword in ['latest', 'current', 'today', 'news', 'price of', 'weather', 'score']):
+        elif any(keyword in content.lower() for keyword in ['latest', 'current', 'today', 'news', 'price', 'weather', 'score', 'time', 'when', 'stock', 'temperature', 'forecast']):
             # Automatically search for relevant terms
             auto_search_query = content
             await message.add_reaction('🔍')
             
             # Perform search
+            logger.info(f"Auto-searching for: {auto_search_query}")
             search_results = await self.web_search.search_for_ai(auto_search_query)
             search_context = search_results
-            content = f"{content} (I automatically searched the web for current information)"
+            logger.info(f"Search results: {search_context[:200]}...")  # Log first 200 chars
+            content = f"{content} (Use the web search results provided to answer this question accurately)"
         
         # Show typing indicator
         async with message.channel.typing():
             # Generate AI response
+            logger.info(f"Generating AI response with search_context: {bool(search_context)}")
             response = await self.ai_chat.generate_response(
                 content,
                 message.author.id,

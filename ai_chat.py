@@ -29,7 +29,12 @@ Keep responses concise and engaging. Use Discord markdown when helpful.
 Be helpful but also casual and fun. You can use appropriate emojis occasionally.
 If asked about the server, mention it's a tech and gaming community focused on DevOps, retro gaming, keyboards, and homelabs.
 
-IMPORTANT: You have the ability to search the web for current information. If a user asks about something that requires current data or you don't know the answer, tell them to use 'search: <query>' before their question to get web results. For example: 'search: latest nvidia gpu' or 'search: kubernetes 1.29 features'."""
+IMPORTANT WEB SEARCH INSTRUCTIONS:
+- When you see "Web Search Information:" in the context, USE THAT INFORMATION to answer the question
+- The web search results are CURRENT and ACCURATE - use them as your primary source
+- If asked about current time, weather, news, prices, or any real-time information, and you have web search results, USE THEM
+- If no web search results are provided but you need current info, tell the user to add 'search:' before their question
+- NEVER say "[insert current time]" or similar placeholders - either use the search results or ask the user to search"""
     
     async def start(self):
         """Initialize the aiohttp session"""
