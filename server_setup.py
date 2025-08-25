@@ -100,15 +100,24 @@ class SudofluxBot(commands.Bot):
                 logger.info(f'Setting up guild: {guild.name} (ID: {guild.id})')
                 await self.setup_guild(guild)
             
-        # Log all registered commands
+        # Log all registered commands BEFORE syncing
         commands = self.tree.get_commands()
-        logger.info(f"Registered {len(commands)} commands:")
+        logger.info(f"Commands registered locally (before sync): {len(commands)}")
         for cmd in commands:
             logger.info(f"  - /{cmd.name}: {cmd.description}")
         
+        # Ensure imagine command is registered
+        if not any(cmd.name == "imagine" for cmd in commands):
+            logger.error("WARNING: /imagine command is not registered!")
+        
         # Sync globally and to specific guilds
-        await self.tree.sync()
-        logger.info("Command tree synced globally")
+        try:
+            synced = await self.tree.sync()
+            logger.info(f"Command tree synced globally: {len(synced)} commands")
+            for cmd in synced:
+                logger.info(f"  Synced: /{cmd.name}")
+        except Exception as e:
+            logger.error(f"Failed to sync commands globally: {e}")
         
         # Also sync to specific guilds for faster updates
         for guild in self.guilds:
@@ -585,6 +594,9 @@ class RoleView(discord.ui.View):
 async def main():
     bot = SudofluxBot()
     
+    # Clear any existing commands first
+    bot.tree.clear_commands(guild=None)
+    
     @bot.tree.command(name="roles", description="Manage your self-assignable roles")
     async def roles_command(interaction: discord.Interaction):
         embed = discord.Embed(
@@ -881,6 +893,18 @@ async def main():
                 f"❌ Error during setup: {str(e)}",
                 ephemeral=True
             )
+    
+    # Log all commands that were defined
+    commands = bot.tree.get_commands()
+    logger.info(f"Commands defined in main(): {len(commands)}")
+    for cmd in commands:
+        logger.info(f"  - /{cmd.name}: {cmd.description}")
+    
+    # Verify imagine command specifically
+    if any(cmd.name == "imagine" for cmd in commands):
+        logger.info("✓ /imagine command is properly registered")
+    else:
+        logger.error("✗ /imagine command was NOT registered!")
     
     token = os.getenv('DISCORD_TOKEN')
     if not token:
