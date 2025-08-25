@@ -105,7 +105,9 @@ IMPORTANT WEB SEARCH INSTRUCTIONS:
             context = self.get_context(conv_key)
             
             # Build the full prompt with context
-            full_prompt = self.system_prompt + "\n\n"
+            from datetime import datetime
+            current_date = datetime.utcnow().strftime("%Y-%m-%d")
+            full_prompt = self.system_prompt + f"\n\nToday's date is: {current_date}\n\n"
             
             # Add search context if provided
             if search_context:
@@ -131,7 +133,7 @@ IMPORTANT WEB SEARCH INSTRUCTIONS:
                     "options": {
                         "temperature": 0.7,
                         "top_p": 0.9,
-                        "max_tokens": 500
+                        "num_predict": 500  # Ollama uses num_predict, not max_tokens
                     }
                 },
                 timeout=aiohttp.ClientTimeout(total=30)
