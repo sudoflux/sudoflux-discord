@@ -763,22 +763,15 @@ async def main():
             await interaction.followup.send(f"❌ No results found for: **{query}**")
     
     @bot.tree.command(name="imagine", description="Generate an image with AI")
-    @app_commands.describe(
-        prompt="What to generate",
-        negative="What to avoid in the image",
-        width="Image width in pixels",
-        height="Image height in pixels", 
-        seed="Random seed number"
-    )
-    async def imagine_command(
-        interaction: discord.Interaction,
-        prompt: str,
-        negative: str = "",
-        width: int = 1024,
-        height: int = 1024,
-        seed: int = -1
-    ):
+    @app_commands.describe(prompt="What to generate")
+    async def imagine_command(interaction: discord.Interaction, prompt: str):
         await interaction.response.defer()
+        
+        # Use default values since we simplified the command
+        negative = ""
+        width = 1024
+        height = 1024
+        seed = -1
         
         # Validate dimensions
         width = max(512, min(1024, width))
