@@ -94,6 +94,12 @@ class SudofluxBot(commands.Bot):
                 logger.info(f'Setting up guild: {guild.name} (ID: {guild.id})')
                 await self.setup_guild(guild)
             
+        # Log all registered commands
+        commands = self.tree.get_commands()
+        logger.info(f"Registered {len(commands)} commands:")
+        for cmd in commands:
+            logger.info(f"  - /{cmd.name}: {cmd.description}")
+        
         # Sync globally and to specific guilds
         await self.tree.sync()
         logger.info("Command tree synced globally")
@@ -101,8 +107,8 @@ class SudofluxBot(commands.Bot):
         # Also sync to specific guilds for faster updates
         for guild in self.guilds:
             try:
-                await self.tree.sync(guild=guild)
-                logger.info(f"Command tree synced to guild: {guild.name}")
+                synced = await self.tree.sync(guild=guild)
+                logger.info(f"Command tree synced to guild: {guild.name} ({len(synced)} commands)")
             except Exception as e:
                 logger.error(f"Failed to sync to guild {guild.name}: {e}")
     
