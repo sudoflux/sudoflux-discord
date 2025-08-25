@@ -765,18 +765,18 @@ async def main():
     @bot.tree.command(name="imagine", description="Generate an image with AI")
     @app_commands.describe(
         prompt="What to generate",
-        negative="What to avoid (optional)",
-        width="Image width (512-1024, default 1024)",
-        height="Image height (512-1024, default 1024)",
-        seed="Seed for reproducibility (optional)"
+        negative="What to avoid in the image",
+        width="Image width in pixels",
+        height="Image height in pixels", 
+        seed="Random seed number"
     )
     async def imagine_command(
         interaction: discord.Interaction,
         prompt: str,
-        negative: Optional[str] = None,
-        width: Optional[int] = 1024,
-        height: Optional[int] = 1024,
-        seed: Optional[int] = -1
+        negative: str = "",
+        width: int = 1024,
+        height: int = 1024,
+        seed: int = -1
     ):
         await interaction.response.defer()
         
@@ -799,7 +799,7 @@ async def main():
         
         result = await bot.image_gen.generate(
             prompt=prompt,
-            negative_prompt=negative,
+            negative_prompt=negative if negative else None,
             width=width,
             height=height,
             seed=seed
