@@ -829,7 +829,12 @@ async def main():
             
         # Check if SD server is available
         if not await bot.image_gen.check_health():
-            await interaction.followup.send("❌ Image generation service is not available right now. Please try again later.")
+            await interaction.followup.send(
+                "❌ **Image generation server is offline**\n\n"
+                "The SD server is currently stopped to save power.\n"
+                "Please ask an admin to start it with:\n"
+                "```bash\n./start_sd_server.sh```"
+            )
             return
         
         # Generate image with info about parameters
