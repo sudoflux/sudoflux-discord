@@ -74,6 +74,7 @@ class SudofluxBot(commands.Bot):
         logger.info("Bot setup hook started")
         await self.ai_chat.start()
         await self.web_search.start()
+        await self.image_gen.start()
         
     async def on_ready(self):
         """Bot ready event"""
@@ -93,8 +94,17 @@ class SudofluxBot(commands.Bot):
                 logger.info(f'Setting up guild: {guild.name} (ID: {guild.id})')
                 await self.setup_guild(guild)
             
+        # Sync globally and to specific guilds
         await self.tree.sync()
-        logger.info("Command tree synced")
+        logger.info("Command tree synced globally")
+        
+        # Also sync to specific guilds for faster updates
+        for guild in self.guilds:
+            try:
+                await self.tree.sync(guild=guild)
+                logger.info(f"Command tree synced to guild: {guild.name}")
+            except Exception as e:
+                logger.error(f"Failed to sync to guild {guild.name}: {e}")
     
     async def setup_guild(self, guild: discord.Guild):
         """Setup or update a guild with the defined structure"""
