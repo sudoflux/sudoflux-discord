@@ -11,6 +11,7 @@ import logging
 from dotenv import load_dotenv
 from ai_chat import AIChat
 from web_search_v2 import WebSearchV2 as WebSearch
+from image_gen import ImageGenerator
 
 load_dotenv()
 
@@ -45,6 +46,11 @@ class SudofluxBot(commands.Bot):
         
         # Initialize web search
         self.web_search = WebSearch()
+        
+        # Initialize image generator
+        sd_host = os.getenv('SD_HOST', '192.168.100.20')
+        sd_port = int(os.getenv('SD_PORT', '7860'))
+        self.image_gen = ImageGenerator(sd_host, sd_port)
     
     def load_structure(self) -> Dict[str, Any]:
         """Load the server structure from YAML file"""
@@ -733,6 +739,66 @@ async def main():
             await interaction.followup.send(formatted)
         else:
             await interaction.followup.send(f"❌ No results found for: **{query}**")
+    
+    @bot.tree.command(name="imagine", description="Generate an image with AI")
+    @app_commands.describe(
+        prompt="What to generate",
+        negative="What to avoid (optional)",
+        width="Image width (512-1024, default 1024)",
+        height="Image height (512-1024, default 1024)",
+        seed="Seed for reproducibility (optional)"
+    )
+    async def imagine_command(
+        interaction: discord.Interaction,
+        prompt: str,
+        negative: Optional[str] = None,
+        width: Optional[int] = 1024,
+        height: Optional[int] = 1024,
+        seed: Optional[int] = -1
+    ):
+        await interaction.response.defer()
+        
+        # Validate dimensions
+        width = max(512, min(1024, width))
+        height = max(512, min(1024, height))
+        
+        # Check if SD server is available
+        if not await bot.image_gen.check_health():
+            await interaction.followup.send("❌ Image generation service is not available right now. Please try again later.")
+            return
+        
+        # Generate image
+        await interaction.followup.send(f"🎨 Generating: **{prompt[:100]}**...")
+        
+        result = await bot.image_gen.generate(
+            prompt=prompt,
+            negative_prompt=negative,
+            width=width,
+            height=height,
+            seed=seed
+        )
+        
+        if result:
+            # Convert base64 to file
+            image_file = await bot.image_gen.base64_to_file(result['image_base64'])
+            
+            # Create embed with details
+            embed = discord.Embed(
+                title="🎨 Image Generated!",
+                description=f"**Prompt:** {prompt[:1000]}",
+                color=discord.Color.blue()
+            )
+            embed.add_field(name="Seed", value=result['seed'], inline=True)
+            embed.add_field(name="Size", value=f"{width}x{height}", inline=True)
+            embed.set_footer(text="Powered by SDXL-Turbo")
+            
+            # Send image
+            file = discord.File(image_file, filename="generated.png")
+            embed.set_image(url="attachment://generated.png")
+            
+            await interaction.followup.send(embed=embed, file=file)
+        else:
+            await interaction.followup.send("❌ Failed to generate image. Please try again.")
     
     @bot.tree.command(name="init_members", description="[Admin] Give Guest role to existing members")
     @app_commands.default_permissions(administrator=True)

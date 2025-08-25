@@ -1,0 +1,9 @@
+torch>=2.0.0
+torchvision>=0.15.0
+diffusers>=0.24.0
+transformers>=4.35.0
+accelerate>=0.24.0
+safetensors>=0.4.0
+aiohttp>=3.8.0
+Pillow>=10.0.0
+omegaconf>=2.3.0

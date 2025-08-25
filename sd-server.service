@@ -1,0 +1,15 @@
+[Unit]
+Description=Stable Diffusion API Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/sd-server
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/usr/bin/python3 /home/ubuntu/sd-server/sd_server.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
