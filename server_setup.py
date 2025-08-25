@@ -10,7 +10,7 @@ from datetime import datetime
 import logging
 from dotenv import load_dotenv
 from ai_chat import AIChat
-from web_search import WebSearch
+from web_search_v2 import WebSearchV2 as WebSearch
 
 load_dotenv()
 
@@ -722,8 +722,8 @@ async def main():
     async def search_command(interaction: discord.Interaction, query: str):
         await interaction.response.defer()
         
-        # Try DuckDuckGo directly since SearXNG seems to be down
-        results = await bot.web_search.search_duckduckgo(query, max_results=5)
+        # Use the new search method
+        results = await bot.web_search.search(query, max_results=5)
         
         if results:
             formatted = bot.web_search.format_results(results, query)
