@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 logger = logging.getLogger('sudoflux-bot.ai')
 
 class AIChat:
-    def __init__(self, ollama_host: str = "192.168.100.20", ollama_port: int = 11434, model: str = "qwen2.5:14b"):
+    def __init__(self, ollama_host: str = "192.168.100.20", ollama_port: int = 11434, model: str = "qwen3:30b-a3b-instruct-2507-q4_K_M"):
         self.base_url = f"http://{ollama_host}:{ollama_port}"
         self.model = model
         self.session = None
@@ -136,7 +136,7 @@ IMPORTANT WEB SEARCH INSTRUCTIONS:
                         "num_predict": 500  # Ollama uses num_predict, not max_tokens
                     }
                 },
-                timeout=aiohttp.ClientTimeout(total=30)
+                timeout=aiohttp.ClientTimeout(total=120)
             ) as response:
                 if response.status == 200:
                     data = await response.json()
