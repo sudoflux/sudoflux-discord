@@ -775,19 +775,34 @@ async def main():
             await interaction.followup.send(f"❌ No results found for: **{query}**")
     
     @bot.tree.command(name="imagine", description="Generate an image with AI")
-    @app_commands.describe(prompt="What to generate")
-    async def imagine_command(interaction: discord.Interaction, prompt: str):
+    @app_commands.describe(
+        prompt="What to generate",
+        negative="What to avoid in the image (optional)",
+        width="Image width in pixels (512-1024, default: 1024)",
+        height="Image height in pixels (512-1024, default: 1024)",
+        seed="Random seed for reproducibility (-1 for random)"
+    )
+    async def imagine_command(
+        interaction: discord.Interaction, 
+        prompt: str,
+        negative: str = "",
+        width: int = 1024,
+        height: int = 1024,
+        seed: int = -1
+    ):
         await interaction.response.defer()
         
-        # Use default values since we simplified the command
-        negative = ""
-        width = 1024
-        height = 1024
-        seed = -1
-        
         # Validate dimensions
-        width = max(512, min(1024, width))
-        height = max(512, min(1024, height))
+        if width < 512 or width > 1024:
+            await interaction.followup.send(f"❌ Width must be between 512 and 1024 pixels (you provided: {width})")
+            return
+        if height < 512 or height > 1024:
+            await interaction.followup.send(f"❌ Height must be between 512 and 1024 pixels (you provided: {height})")
+            return
+        
+        # Round to nearest 64 pixels for better SD performance
+        width = (width // 64) * 64
+        height = (height // 64) * 64
         
         # Check if image_gen is available
         if not bot.image_gen:
@@ -799,8 +814,16 @@ async def main():
             await interaction.followup.send("❌ Image generation service is not available right now. Please try again later.")
             return
         
-        # Generate image
-        await interaction.followup.send(f"🎨 Generating: **{prompt[:100]}**...")
+        # Generate image with info about parameters
+        info = f"🎨 Generating: **{prompt[:100]}**"
+        if negative:
+            info += f"\n🚫 Avoiding: {negative[:50]}"
+        if seed != -1:
+            info += f"\n🎲 Seed: {seed}"
+        info += f"\n📐 Size: {width}x{height}"
+        info += "\n⏳ This may take 10-30 seconds..."
+        
+        await interaction.followup.send(info)
         
         result = await bot.image_gen.generate(
             prompt=prompt,
@@ -820,6 +843,8 @@ async def main():
                 description=f"**Prompt:** {prompt[:1000]}",
                 color=discord.Color.blue()
             )
+            if negative:
+                embed.add_field(name="Negative Prompt", value=negative[:500], inline=False)
             embed.add_field(name="Seed", value=result['seed'], inline=True)
             embed.add_field(name="Size", value=f"{width}x{height}", inline=True)
             embed.set_footer(text="Powered by SDXL-Turbo")
