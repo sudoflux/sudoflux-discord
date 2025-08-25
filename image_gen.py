@@ -42,8 +42,9 @@ class ImageGenerator:
         negative_prompt: Optional[str] = None,
         width: int = 1024,
         height: int = 1024,
-        steps: int = 4,
-        seed: int = -1
+        steps: int = 8,  # Increased default for better quality
+        seed: int = -1,
+        guidance_scale: float = 2.0  # Add some guidance for better quality
     ) -> Optional[Dict]:
         """Generate an image using Stable Diffusion"""
         try:
@@ -53,11 +54,11 @@ class ImageGenerator:
             # Prepare request
             payload = {
                 'prompt': prompt,
-                'negative_prompt': negative_prompt or 'blurry, bad quality, watermark',
+                'negative_prompt': negative_prompt or 'blurry, bad quality, watermark, ugly, deformed, distorted',
                 'width': width,
                 'height': height,
                 'steps': steps,
-                'guidance_scale': 0.0,  # SDXL-Turbo doesn't use CFG
+                'guidance_scale': guidance_scale,  # Allow guidance control
                 'seed': seed
             }
             

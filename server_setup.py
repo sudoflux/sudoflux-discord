@@ -778,6 +778,7 @@ async def main():
     @app_commands.describe(
         prompt="What to generate",
         negative="What to avoid in the image (optional)",
+        quality="Quality preset: fast (4 steps), balanced (8 steps), quality (12 steps)",
         width="Image width in pixels (512-1024, default: 1024)",
         height="Image height in pixels (512-1024, default: 1024)",
         seed="Random seed for reproducibility (-1 for random)"
@@ -786,11 +787,28 @@ async def main():
         interaction: discord.Interaction, 
         prompt: str,
         negative: str = "",
+        quality: str = "balanced",
         width: int = 1024,
         height: int = 1024,
         seed: int = -1
     ):
         await interaction.response.defer()
+        
+        # Parse quality preset
+        quality_presets = {
+            "fast": {"steps": 4, "guidance": 0.0},      # Original SDXL-Turbo settings
+            "balanced": {"steps": 8, "guidance": 2.0},   # Better quality, still fast
+            "quality": {"steps": 12, "guidance": 3.5},   # Best quality, slower
+            "high": {"steps": 20, "guidance": 5.0}       # Maximum quality (hidden option)
+        }
+        
+        quality = quality.lower()
+        if quality not in quality_presets:
+            await interaction.followup.send(f"❌ Invalid quality preset. Use: fast, balanced, or quality")
+            return
+        
+        steps = quality_presets[quality]["steps"]
+        guidance_scale = quality_presets[quality]["guidance"]
         
         # Validate dimensions
         if width < 512 or width > 1024:
@@ -818,10 +836,14 @@ async def main():
         info = f"🎨 Generating: **{prompt[:100]}**"
         if negative:
             info += f"\n🚫 Avoiding: {negative[:50]}"
+        info += f"\n⚡ Quality: {quality.capitalize()} ({steps} steps, {guidance_scale} guidance)"
         if seed != -1:
             info += f"\n🎲 Seed: {seed}"
         info += f"\n📐 Size: {width}x{height}"
-        info += "\n⏳ This may take 10-30 seconds..."
+        
+        # Estimate time based on quality
+        time_estimates = {"fast": "5-10", "balanced": "10-20", "quality": "15-30", "high": "20-40"}
+        info += f"\n⏳ Estimated time: {time_estimates.get(quality, '10-30')} seconds..."
         
         await interaction.followup.send(info)
         
@@ -830,6 +852,8 @@ async def main():
             negative_prompt=negative if negative else None,
             width=width,
             height=height,
+            steps=steps,
+            guidance_scale=guidance_scale,
             seed=seed
         )
         
@@ -845,9 +869,10 @@ async def main():
             )
             if negative:
                 embed.add_field(name="Negative Prompt", value=negative[:500], inline=False)
+            embed.add_field(name="Quality", value=f"{quality.capitalize()} ({steps} steps)", inline=True)
             embed.add_field(name="Seed", value=result['seed'], inline=True)
             embed.add_field(name="Size", value=f"{width}x{height}", inline=True)
-            embed.set_footer(text="Powered by SDXL-Turbo")
+            embed.set_footer(text="Powered by SDXL-Turbo | Try 'quality' preset for better results!")
             
             # Send image
             file = discord.File(image_file, filename="generated.png")
